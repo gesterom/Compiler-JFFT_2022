@@ -1,0 +1,3 @@
+﻿  pch.cpp
+  test.cpp
+LINK : fatal error LNK1168: cannot open F:\Projects\studia\2022 zima\JFFT lista 4 VS2022\Compiler\x64\Debug\Tests.exe for writing

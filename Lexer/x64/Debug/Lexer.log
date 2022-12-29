@@ -1,0 +1,3 @@
+﻿  Lexer.cpp
+F:\Projects\studia\2022 zima\JFFT lista 4 VS2022\Compiler\Lexer\Lexer.cpp(177,49): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+  Lexer.vcxproj -> F:\Projects\studia\2022 zima\JFFT lista 4 VS2022\Compiler\x64\Debug\Lexer.lib

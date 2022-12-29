@@ -3,13 +3,14 @@
 
 #include "pch.h"
 #include "Lexer.h"
+#include <iostream>
 
 Lexer::Lexer(std::istream& in)
 {
 	this->buff.filecontent = "";
-	while(in.good()){
-		char ch;
-		in.get(ch);
+	char ch;
+	while(in.get(ch) && in.good()) {
+		//in.get(ch);
 		this->buff.filecontent+=ch;
 	}
 }
@@ -20,6 +21,7 @@ std::string  substring(std::string str,int begin,int end){
 	}
 	return res;
 }
+
 Token Lexer::getNextToken()
 {
 	for(auto& i : this->vec){
@@ -27,18 +29,32 @@ Token Lexer::getNextToken()
 		if(i.first(this->buff,forward)){
 			Token res;
 			res.type = i.second;
-			res.value = substring(this->buff.filecontent,this->buff.lexeme,forward);
-			this->buff.lexeme = forward;
+			res.value = substring(this->buff.filecontent,this->buff.lexeme, this->buff.lexeme + forward);
+			this->buff.lexeme += forward;
 			return res;
 		}
 	}
-
-	return Token();
+	return errorHandling(this->buff);
 }
 
 std::vector<Token> Lexer::getTokens()
 {
-	return std::vector<Token>();
+	std::vector<Token> res;
+	while(buff.lexeme<buff.filecontent.size()){
+		auto t = getNextToken();
+		if(t.type == TokenType::IGNORE) continue;
+		if(t.type == TokenType::END_OF_FILE) break;
+		res.push_back(t);
+	}
+	return res;
+}
+
+Token Lexer::errorHandling(Buffor& buff)
+{
+	std::cout <<"Unexpected character on "<< buff.lexeme <<"";
+	std::cout<< " [ "<<buff[0] << " ]\n\t: ";
+	std::cout<<buff.range(-5,5)<<std::endl;
+	exit(-2);
 }
 
 bool Lexer::isNextToken()
@@ -46,7 +62,7 @@ bool Lexer::isNextToken()
 	return false;
 }
 
-Lexer::Builder::Builder(std::istream& in) : in(in)
+Lexer::Builder::Builder()
 {
 }
 
@@ -56,7 +72,7 @@ Lexer::Builder& Lexer::Builder::addToken(Regex match, TokenType type)
 	return *this;
 }
 
-Lexer Lexer::Builder::build()
+Lexer Lexer::Builder::build(std::istream& in)
 {
 	Lexer res(in);
 	res.vec = this->vec;
@@ -113,6 +129,7 @@ bool Identifier(const Buffor& buff, int& i)
 				return false;
 		}
 	}
+	return true;
 }
 
 bool Integer(const Buffor& buff, int& i)
@@ -128,9 +145,35 @@ bool Integer(const Buffor& buff, int& i)
 				return false;
 		}
 	}
+	return true;
+}
+
+bool Comment(const Buffor& buff, int& i)
+{
+	if(buff[0] == '['){
+		for(i=0;i+buff.lexeme < buff.filecontent.size();i++){
+			if(buff[i-1]==']') return true;
+		}
+	}
+	return false;
 }
 
 char Buffor::operator[](int a) const
 {
 	return this->filecontent[lexeme + a];
+}
+
+int64_t max(int64_t a,int64_t b){
+	return (a>b)?a:b;
+}
+
+int64_t min(int64_t a,int64_t b){
+	return (a<b)?a:b;
+}
+
+std::string Buffor::range(int a, int b) const
+{
+	a = max(this->lexeme+a,0);
+	b = min(this->lexeme+b,this->filecontent.size());
+	return substring(this->filecontent,a,b);
 }
